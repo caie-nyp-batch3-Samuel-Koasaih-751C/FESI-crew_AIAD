@@ -2,3 +2,11 @@
 #
 # Documentation for this file format can be found in "The Data Catalog"
 # Link: https://docs.kedro.org/en/stable/data/data_catalog.html
+
+raw_images:
+  type: partitions.PartitionedDataset
+  path: data/01_raw/plantdisease
+  filename_suffix: .jpg        # choose one; see note below
+  dataset:
+    type: kedro_datasets.pillow.ImageDataset 
+
