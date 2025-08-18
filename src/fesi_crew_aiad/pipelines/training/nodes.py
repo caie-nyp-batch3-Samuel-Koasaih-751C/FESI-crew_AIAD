@@ -195,3 +195,33 @@ def train_validate_test_one_node(
         verbose=1,
     )
 
+    # ---- Save history (pickle) & plot
+    history_out = Path(out_history_path); history_out.parent.mkdir(parents=True, exist_ok=True)
+    with open(history_out, "wb") as f:
+        pickle.dump(hist.history, f)
+    _plot_history(hist.history, Path(out_history_plot))
+
+    # ---- Test evaluation
+    test_loss, test_acc = model.evaluate(test_gen, verbose=0)
+
+    # Confusion matrix + report
+    y_prob = model.predict(test_gen, verbose=0)
+    y_pred = np.argmax(y_prob, axis=1)
+    y_true = test_gen.classes
+    class_names = list(test_gen.class_indices.keys())
+    cm = confusion_matrix(y_true, y_pred)
+    _plot_confusion(cm, class_names, Path(out_cm_plot))
+
+    report = classification_report(y_true, y_pred, target_names=class_names)
+    report_out = Path(out_report_path); report_out.parent.mkdir(parents=True, exist_ok=True)
+    with open(report_out, "w") as f:
+        f.write(report)
+
+    # ---- Return short metrics for Kedro logs
+    return {
+        "val_best_acc": float(max(hist.history.get("val_accuracy", [0.0]))),
+        "test_acc": float(test_acc),
+        "test_loss": float(test_loss),
+        "n_classes": float(n_classes),
+        "model_path": str(model_out),
+    }
