@@ -1,0 +1,29 @@
+#Dockerfile.ui
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# OS deps (tiny)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential ca-certificates curl && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install only the UI deps (fast layer)
+COPY docker/requirements.ui.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+# App code
+COPY src /app/src
+ENV PYTHONPATH=/app/src
+
+# --- add model into image ---
+COPY data/06_models/model.h5 /app/model/model.h5
+ENV MODEL_PATH=/app/model/model.h5
+
+# Gunicorn config + entrypoint
+COPY docker/gunicorn.conf.py /app/gunicorn.conf.py
+COPY docker/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+EXPOSE 8000
+CMD ["/app/entrypoint.sh"]
