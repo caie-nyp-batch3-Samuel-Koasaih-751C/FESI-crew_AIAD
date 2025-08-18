@@ -1,0 +1,10 @@
+# --- runtime deps for inference ---
+tensorflow-cpu==2.17.0        # use -cpu in containers; no CUDA needed
+h5py>=3.10                    # Keras H5 loader
+opencv-python-headless>=4.9   # no X11
+Pillow>=10
+numpy>=1.26
+Flask==2.3.3
+Werkzeug<3
+gunicorn>=21.2
+# if your UI imports Kedro or other libs, add them here too
