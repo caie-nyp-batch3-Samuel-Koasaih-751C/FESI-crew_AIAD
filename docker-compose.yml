@@ -1,0 +1,59 @@
+name: aiad-fesi-crew
+
+services:
+  mask_apply:
+    build: { context: ., dockerfile: docker/Dockerfile.kedro }
+    environment:
+      PIPELINE: mask_merge
+      KEDRO_ENV: base
+    volumes:
+      - ./data:/project/data
+      - ./conf:/project/conf:ro
+      - ./src:/project/src:ro
+
+  split:
+    build: { context: ., dockerfile: docker/Dockerfile.kedro }
+    environment:
+      PIPELINE: data_split
+      KEDRO_ENV: base
+    depends_on:
+      - mask_apply
+    volumes:
+      - ./data:/project/data
+      - ./conf:/project/conf:ro
+      - ./src:/project/src:ro
+
+  train:
+    build: { context: ., dockerfile: docker/Dockerfile.train }
+    environment:
+      PIPELINE: training
+      KEDRO_ENV: base
+      # If using NVIDIA toolkit, these help on local compose:
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility
+    # Choose ONE of the GPU options that works on your host:
+    # gpus: all                     # ✅ Docker Compose v2 with NVIDIA toolkit
+    # runtime: nvidia               # (older setups)
+    devices:                        # (optional; only if you really need explicit devices)
+      - /dev/nvidiactl:/dev/nvidiactl
+      - /dev/nvidia0:/dev/nvidia0
+      - /dev/nvidia-uvm:/dev/nvidia-uvm
+      - /dev/nvidia-uvm-tools:/dev/nvidia-uvm-tools
+    depends_on:
+      - split
+    volumes:
+      - ./data:/project/data
+      - ./conf:/project/conf:ro
+      - ./src:/project/src:ro
+
+  ui:
+    build: { context: ., dockerfile: docker/Dockerfile.ui }   # ⬅ uses the UI image we built
+    environment:
+      PIPELINE: ui
+      MODEL_PATH: /project/data/06_models/model.h5
+    ports:
+      - "8000:8000"
+    # depends_on: [train]           # enable if UI must wait for training output
+    volumes:
+      - ./data:/project/data:ro     # UI only needs the model; no need to mount conf/src
+    restart: unless-stopped
