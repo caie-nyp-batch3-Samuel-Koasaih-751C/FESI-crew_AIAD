@@ -11,6 +11,7 @@ setuptools; python_version >= "3.12"
 # -----------------------------
 kedro[jupyter]==0.19.14
 kedro-datasets[pandas]==7.0.0
+kedro-datasets[pillow]>=7.0.0     # needed for kedro_datasets.pillow.ImageDataSet
 
 # -----------------------------
 # Core ML & Stats
@@ -25,9 +26,14 @@ imblearn==0.0
 # -----------------------------
 # Computer Vision stack
 # -----------------------------
+Pillow>=9.5
+opencv-python-headless>=4.8       # headless: smaller + no GUI deps (good for Docker/K8s)
+# If you use OpenCV locally with GUI viewers, add: opencv-python>=4.8
+
 # Deep learning backbones (DenseNet/ResNet/EfficientNet via torchvision)
 # Use a flexible lower bound to avoid Python version conflicts.
 torch>=2.2
+torchvision>=0.17
 tensorflow==2.15.0
 
 # Augmentations (optional but handy)
