@@ -10,3 +10,19 @@ raw_images:
   dataset:
     type: kedro_datasets.pillow.ImageDataset 
 
+leaf_masks:
+  type: partitions.PartitionedDataset
+  path: data/02_intermediate/maskingv5
+  filename_suffix: .png
+  dataset:
+    type: kedro_datasets.pillow.ImageDataset 
+
+combined_images:
+  type: partitions.PartitionedDataset
+  path: data/02_intermediate/combined_images
+  dataset:
+    type: kedro_datasets.pillow.ImageDataset 
+
+bbox_index:
+  type: pandas.CSVDataset
+  filepath: data/02_intermediate/bbox_index.csv
