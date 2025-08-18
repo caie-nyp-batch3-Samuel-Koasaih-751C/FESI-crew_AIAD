@@ -1,0 +1,28 @@
+FROM python:3.10-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    KEDRO_DISABLE_TELEMETRY=1
+
+# System deps for numpy/scipy/opencv etc.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential gcc \
+    libgl1 libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /project
+
+# 1) Install Python deps early (cache-friendly)
+COPY requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 2) Copy code and config
+COPY src ./src
+COPY conf ./conf
+COPY pyproject.toml ./pyproject.toml
+
+# 3) Add an entrypoint to choose what to run
+COPY docker/entrypoint.train.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
