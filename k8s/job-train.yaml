@@ -6,7 +6,7 @@ spec:
   template:
     spec:
       restartPolicy: Never
-      containe:
+      containers:
       - name: train
         image: yourorg/plantml-train:latest
         env:
