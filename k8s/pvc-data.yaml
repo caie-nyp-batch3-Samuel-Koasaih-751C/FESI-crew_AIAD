@@ -3,4 +3,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: plantml-data-pvc
 spec:
-
+  accessModes: ["ReadWriteMany"]
+  resources:
+    requests:
+      storage: 50Gi
