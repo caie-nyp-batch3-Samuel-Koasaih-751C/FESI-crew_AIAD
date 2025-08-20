@@ -5,7 +5,7 @@ It covers data ingestion, preprocessing, masking, dataset splitting, model train
 
 ## Running Kedro Pipelines Locally
 
-1. Install dependencies:
+Install dependencies:
 
     pip install -r requirements.txt
 
