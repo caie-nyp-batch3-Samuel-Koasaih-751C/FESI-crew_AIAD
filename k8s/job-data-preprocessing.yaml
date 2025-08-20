@@ -1,0 +1,28 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: job-data-preprocessing
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app: data-preprocessing
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: data-preprocessing
+          image: aiad-fesi-crew-kedro:v5   # <-- same Kedro image with conf baked in
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PIPELINE
+              value: "data_preprocessing"   # <-- your Kedro pipeline name
+            - name: KEDRO_ENV
+              value: "base"
+          volumeMounts:
+            - name: data
+              mountPath: /project/data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: plantml-data-pvc
