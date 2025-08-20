@@ -14,6 +14,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 2) copy project metadata and source
 COPY pyproject.toml ./pyproject.toml
 COPY src ./src
+COPY conf ./conf      
+COPY conf /project/conf
 
 # 3) install the kedro package itself (editable)
 RUN pip install --no-cache-dir -e .

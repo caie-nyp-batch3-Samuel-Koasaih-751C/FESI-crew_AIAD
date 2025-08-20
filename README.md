@@ -1,101 +1,149 @@
-# FESI-crew_aiad
+# AIAD FESI Crew Project
 
-[![Powered by Kedro](https://img.shields.io/badge/powered_by-kedro-ffc900?logo=kedro)](https://kedro.org)
+This project implements a full machine learning workflow using **Kedro**, **Docker**, and **Kubernetes** with a Flask UI for inference.  
+It covers data ingestion, preprocessing, masking, dataset splitting, model training, and a production-ready UI served via Gunicorn behind Kubernetes with autoscaling.
 
-## Overview
+## Running Kedro Pipelines Locally
 
-This is your new Kedro project, which was generated using `kedro 0.19.14`.
+1. Install dependencies:
 
-Take a look at the [Kedro documentation](https://docs.kedro.org) to get started.
+    pip install -r requirements.txt
 
-## Rules and guidelines
+Run a pipeline:
 
-In order to get the best out of the template:
+    kedro run --pipeline data_split
+    kedro run --pipeline training
 
-* Don't remove any lines from the `.gitignore` file we provide
-* Make sure your results can be reproduced by following a data engineering convention
-* Don't commit data to your repository
-* Don't commit any credentials or your local configuration to your repository. Keep all your credentials and local configuration in `conf/local/`
+Pipelines available:
 
-## How to install dependencies
+    data_ingestion
 
-Declare any dependencies in `requirements.txt` for `pip` installation.
+    data_preprocessing
 
-To install them, run:
+    mask_merge
 
-```
-pip install -r requirements.txt
-```
+    data_split
 
-## How to run your Kedro pipeline
+    training
 
-You can run your Kedro project with:
+Running with Docker
+Build Images
 
-```
-kedro run
-```
+    # Kedro worker image
+    docker build -f docker/Dockerfile.kedro -t aiad-fesi-crew-kedro:v5 .
 
-## How to test your Kedro project
+    # Training image    
+    docker build -f docker/Dockerfile.train -t aiad-fesi-crew-train:v3 .
 
-Have a look at the file `src/tests/test_run.py` for instructions on how to write your tests. You can run your tests as follows:
+    # UI image
+    docker build -f docker/Dockerfile.ui -t aiad-fesi-crew-ui:v3 .
 
-```
-pytest
-```
+Run UI Locally
 
-You can configure the coverage threshold in your project's `pyproject.toml` file under the `[tool.coverage.report]` section.
+    docker run --rm -p 8000:8000 aiad-fesi-crew-ui:v3
 
+Then open http://localhost:8000
 
-## Project dependencies
+.
+Running on Kubernetes (Minikube)
+Start Minikube
 
-To see and update the dependency requirements for your project use `requirements.txt`. You can install the project requirements with `pip install -r requirements.txt`.
+    minikube start
 
-[Further information about project dependencies](https://docs.kedro.org/en/stable/kedro_project_setup/dependencies.html#project-specific-dependencies)
+Deploy Data PVC
 
-## How to work with Kedro and notebooks
+    kubectl apply -f k8s/pvc-data.yaml
 
-> Note: Using `kedro jupyter` or `kedro ipython` to run your notebook provides these variables in scope: `context`, 'session', `catalog`, and `pipelines`.
->
-> Jupyter, JupyterLab, and IPython are already included in the project requirements by default, so once you have run `pip install -r requirements.txt` you will not need to take any extra steps before you use them.
+Run Data/Training Jobs
 
-### Jupyter
-To use Jupyter notebooks in your Kedro project, you need to install Jupyter:
+    kubectl apply -f k8s/job-ingestion.yaml
+    kubectl apply -f k8s/job-data-preprocessing.yaml
+    kubectl apply -f k8s/job-mask-apply.yaml
+    kubectl apply -f k8s/job-split.yaml
+    kubectl apply -f k8s/job-train.yaml
 
-```
-pip install jupyter
-```
+Deploy UI
 
-After installing Jupyter, you can start a local notebook server:
+    kubectl apply -f k8s/deploy-ui.yaml
+    kubectl apply -f k8s/ui-service.yaml
 
-```
-kedro jupyter notebook
-```
+(Optional) Horizontal Pod Autoscaler
 
-### JupyterLab
-To use JupyterLab, you need to install it:
+    kubectl apply -f k8s/ui-hpa.yaml
 
-```
-pip install jupyterlab
-```
+Ingress Access
 
-You can also start JupyterLab:
+Enable ingress:
 
-```
-kedro jupyter lab
-```
+    minikube addons enable ingress
 
-### IPython
-And if you want to run an IPython session:
+Apply ingress:
 
-```
-kedro ipython
-```
+    kubectl apply -f k8s/ui-ingress.yaml
 
-### How to ignore notebook output cells in `git`
-To automatically strip out all output cell contents before committing to `git`, you can use tools like [`nbstripout`](https://github.com/kynan/nbstripout). For example, you can add a hook in `.git/config` with `nbstripout --install`. This will run `nbstripout` before anything is committed to `git`.
+    Update /etc/hosts:
 
-> *Note:* Your output cells will be retained locally.
+    192.168.49.2   ui.potatoe
 
-## Package your Kedro project
+(replace with your minikube ip)
 
-[Further information about building project documentation and packaging your project](https://docs.kedro.org/en/stable/tutorial/package_a_project.html)
+Open http://ui.potatoe
+⚡ Load Testing HPA
+
+To simulate load and test scaling:
+
+    # Install hey (Arch)
+    sudo pacman -S hey
+
+    # Run load test
+    hey -z 30s -c 50 http://ui.potatoe/
+
+Monitor scaling:
+
+    kubectl get hpa -w
+
+Features Implemented
+
+    Kedro pipelines for data processing and training
+
+    Dockerized pipelines and UI
+
+    Kubernetes jobs for each pipeline stage
+
+    PVC for persistent dataset sharing
+
+    UI deployment with health probes
+
+    Service + Ingress for external access
+
+    Horizontal Pod Autoscaler (HPA)
+
+    Load testing setup with hey
+
+Demo Script (Quick Run)
+
+    # 1. Start cluster
+    minikube start
+
+    # 2. Deploy PVC
+    kubectl apply -f k8s/pvc-data.yaml
+
+    # 3. Run preprocessing + training
+    kubectl apply -f k8s/job-ingestion.yaml
+    kubectl apply -f k8s/job-data-preprocessing.yaml
+    kubectl apply -f k8s/job-mask-apply.yaml
+    kubectl apply -f k8s/job-split.yaml
+    kubectl apply -f k8s/job-train.yaml
+
+    # 4. Deploy UI
+    kubectl apply -f k8s/deploy-ui.yaml
+    kubectl apply -f k8s/ui-service.yaml
+    kubectl apply -f k8s/ui-ingress.yaml
+    kubectl apply -f k8s/ui-hpa.yaml
+
+    # 5. Access UI
+    minikube ip   # check cluster IP
+    # add to /etc/hosts
+    # <IP>   ui.potatoe
+👨‍💻 Authors: AIAD FESI Crew
+📅 Version: August 2025
