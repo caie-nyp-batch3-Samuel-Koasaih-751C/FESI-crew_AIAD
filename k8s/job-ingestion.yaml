@@ -1,0 +1,28 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: job-ingestion
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app: ingestion
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: ingestion
+          image: aiad-fesi-crew-kedro:v5   # <-- rebuilt image with conf/ included
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PIPELINE
+              value: "data_ingestion"
+            - name: KEDRO_ENV
+              value: "base"
+          volumeMounts:
+            - name: data
+              mountPath: /project/data   # persistent data volume
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: plantml-data-pvc  # must already exist
