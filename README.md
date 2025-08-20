@@ -88,7 +88,7 @@ Apply ingress:
 (replace with your minikube ip)
 
 Open http://ui.potatoe
-⚡ Load Testing HPA
+Load Testing HPA
 
 To simulate load and test scaling:
 
@@ -145,5 +145,5 @@ Demo Script (Quick Run)
     minikube ip   # check cluster IP
     # add to /etc/hosts
     # <IP>   ui.potatoe
-👨‍💻 Authors: AIAD FESI Crew
-📅 Version: August 2025
+Authors: AIAD FESI Crew
+Version: August 2025
